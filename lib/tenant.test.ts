@@ -85,4 +85,16 @@ describe("forTenant() cross-tenant isolation", () => {
     });
     expect(stillExists).not.toBeNull();
   });
+
+  it("ignores a caller-supplied businessId in findMany's where clause — the tenant scope always wins", async () => {
+    const asBusinessA = forTenant({ businessId: businessA.id });
+
+    // A malicious or buggy caller tries to override the scope from outside.
+    const results = await asBusinessA.customer.findMany({
+      where: { businessId: businessB.id },
+    });
+
+    expect(results.find((c) => c.id === customerInB.id)).toBeUndefined();
+    expect(results.every((c) => c.businessId === businessA.id)).toBe(true);
+  });
 });
