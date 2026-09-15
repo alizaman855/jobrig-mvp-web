@@ -39,6 +39,18 @@ async function main() {
     },
   });
 
+  const dispatcher = await prisma.user.upsert({
+    where: { email: "dispatcher@acmehvac.test" },
+    update: {},
+    create: {
+      businessId: business.id,
+      name: "Dana Dispatcher",
+      email: "dispatcher@acmehvac.test",
+      passwordHash,
+      role: "DISPATCHER",
+    },
+  });
+
   const customers = await Promise.all(
     [
       {
@@ -74,11 +86,56 @@ async function main() {
     )
   );
 
+  const now = new Date();
+  const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  tomorrow.setHours(10, 0, 0, 0);
+
+  const jobs = await Promise.all(
+    [
+      {
+        id: "demo-job-1",
+        customerId: "demo-customer-1",
+        serviceType: "AC unit tune-up",
+        address: "12 Maple St, Springfield",
+        status: "SCHEDULED" as const,
+        assignedTechId: tech.id,
+        scheduledAt: inTwoHours,
+      },
+      {
+        id: "demo-job-2",
+        customerId: "demo-customer-2",
+        serviceType: "Water heater install",
+        address: "48 Oak Ave, Springfield",
+        status: "SCHEDULED" as const,
+        assignedTechId: tech.id,
+        scheduledAt: tomorrow,
+      },
+      {
+        id: "demo-job-3",
+        customerId: "demo-customer-3",
+        serviceType: "Fence repair estimate",
+        address: "900 Commerce Blvd, Springfield",
+        status: "NEW" as const,
+        assignedTechId: null,
+        scheduledAt: null,
+      },
+    ].map((job) =>
+      prisma.job.upsert({
+        where: { id: job.id },
+        update: {},
+        create: { ...job, businessId: business.id },
+      })
+    )
+  );
+
   console.log("Seeded:", {
     business: business.name,
     owner: owner.email,
+    dispatcher: dispatcher.email,
     tech: tech.email,
     customers: customers.map((c) => c.name),
+    jobs: jobs.map((j) => j.serviceType),
     demoPassword: DEMO_PASSWORD,
   });
 }

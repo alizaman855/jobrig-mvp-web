@@ -38,7 +38,7 @@ instrumentation.ts   Runs once on server boot — validates required env vars
 5. Run the dev server: `npm run dev`
 6. Open [http://localhost:3000](http://localhost:3000).
 
-Demo login (once auth ships in Phase 2): `owner@acmehvac.test` / `password123` (owner), `tech@acmehvac.test` / `password123` (tech).
+Demo login: `owner@acmehvac.test` / `password123` (owner), `dispatcher@acmehvac.test` / `password123` (dispatcher), `tech@acmehvac.test` / `password123` (tech). All share the password above.
 
 Run tests with `npm test` (Vitest). `lib/tenant.test.ts` proves cross-tenant data isolation against a real database — it creates and cleans up its own throwaway businesses.
 

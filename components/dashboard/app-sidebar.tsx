@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Settings, Users } from "lucide-react";
+import { Briefcase, ClipboardList, LayoutDashboard, Settings, Users, UsersRound } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +24,24 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  {
+    href: "/dashboard/jobs",
+    label: "Jobs",
+    icon: Briefcase,
+    roles: ["OWNER", "DISPATCHER"],
+  },
+  {
+    href: "/dashboard/customers",
+    label: "Customers",
+    icon: UsersRound,
+    roles: ["OWNER", "DISPATCHER"],
+  },
+  {
+    href: "/dashboard/my-jobs",
+    label: "My Jobs",
+    icon: ClipboardList,
+    roles: ["TECH"],
+  },
   { href: "/dashboard/team", label: "Team", icon: Users, roles: ["OWNER"] },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["OWNER"] },
 ];
@@ -69,7 +87,11 @@ export function AppSidebar({
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       render={<Link href={item.href} />}
-                      isActive={pathname === item.href}
+                      isActive={
+                        item.href === "/dashboard"
+                          ? pathname === item.href
+                          : pathname.startsWith(item.href)
+                      }
                       tooltip={item.label}
                     >
                       <item.icon className="size-4" />
