@@ -47,3 +47,7 @@ next-env.d.ts
 /.agents/
 /.windsurf/
 /.claude/skills/prisma-*
+
+# Python bytecode cache from skill scripts
+__pycache__/
+*.pyc
