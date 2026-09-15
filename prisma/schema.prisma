@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
@@ -10,4 +8,223 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  OWNER
+  DISPATCHER
+  TECH
+}
+
+enum JobStatus {
+  NEW
+  QUOTED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  PAID
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  SIGNED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+}
+
+enum ReviewRequestStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Tenant root
+// ---------------------------------------------------------------------------
+
+/// The tenant. Every other model (except this one) carries a direct
+/// businessId FK so every query can be scoped uniformly by lib/tenant.ts.
+model Business {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          User[]
+  customers      Customer[]
+  jobs           Job[]
+  quotes         Quote[]
+  quoteLineItems QuoteLineItem[]
+  invoices       Invoice[]
+  reviewRequests ReviewRequest[]
+}
+
+// ---------------------------------------------------------------------------
+// Users
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  businessId   String
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  assignedJobs Job[]    @relation("JobAssignedTech")
+
+  @@index([businessId])
+}
+
+// ---------------------------------------------------------------------------
+// Customers
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  phone      String
+  email      String?
+  address    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  jobs           Job[]
+  quotes         Quote[]
+  invoices       Invoice[]
+  reviewRequests ReviewRequest[]
+
+  @@index([businessId])
+}
+
+// ---------------------------------------------------------------------------
+// Jobs
+// ---------------------------------------------------------------------------
+
+model Job {
+  id             String    @id @default(cuid())
+  businessId     String
+  customerId     String
+  serviceType    String
+  address        String
+  status         JobStatus @default(NEW)
+  notes          String?
+  assignedTechId String?
+  scheduledAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer       Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  assignedTech   User?           @relation("JobAssignedTech", fields: [assignedTechId], references: [id], onDelete: SetNull)
+  quotes         Quote[]
+  invoices       Invoice[]
+  reviewRequests ReviewRequest[]
+
+  @@index([businessId])
+  @@index([businessId, status])
+  @@index([businessId, assignedTechId])
+}
+
+// ---------------------------------------------------------------------------
+// Quotes
+// ---------------------------------------------------------------------------
+
+model Quote {
+  id         String      @id @default(cuid())
+  businessId String
+  jobId      String
+  customerId String
+  status     QuoteStatus @default(DRAFT)
+  total      Decimal     @default(0) @db.Decimal(10, 2)
+  notes      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  business  Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  job       Job             @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  customer  Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  lineItems QuoteLineItem[]
+
+  @@index([businessId])
+  @@index([businessId, jobId])
+}
+
+model QuoteLineItem {
+  id          String   @id @default(cuid())
+  businessId  String
+  quoteId     String
+  description String
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  total       Decimal  @db.Decimal(10, 2)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  quote    Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([businessId, quoteId])
+}
+
+// ---------------------------------------------------------------------------
+// Invoices
+// ---------------------------------------------------------------------------
+
+model Invoice {
+  id            String        @id @default(cuid())
+  businessId    String
+  jobId         String
+  customerId    String
+  total         Decimal       @default(0) @db.Decimal(10, 2)
+  status        InvoiceStatus @default(UNPAID)
+  paymentMethod String?
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  job      Job      @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([businessId])
+  @@index([businessId, jobId])
+  @@index([businessId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Review requests
+// ---------------------------------------------------------------------------
+
+model ReviewRequest {
+  id               String              @id @default(cuid())
+  businessId       String
+  jobId            String
+  customerId       String
+  status           ReviewRequestStatus @default(PENDING)
+  sentAt           DateTime?
+  twilioMessageSid String?
+  createdAt        DateTime            @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  job      Job      @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([businessId])
+  @@index([businessId, jobId])
 }
