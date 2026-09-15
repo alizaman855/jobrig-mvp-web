@@ -60,6 +60,7 @@ model Business {
   updatedAt DateTime @updatedAt
 
   users          User[]
+  invitations    Invitation[]
   customers      Customer[]
   jobs           Job[]
   quotes         Quote[]
@@ -82,9 +83,39 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  assignedJobs Job[]    @relation("JobAssignedTech")
+  business           Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  assignedJobs       Job[]        @relation("JobAssignedTech")
+  invitationsSent    Invitation[] @relation("InvitationsSent")
+  acceptedInvitation Invitation?  @relation("InvitationAccepted")
 
+  @@index([businessId])
+}
+
+// ---------------------------------------------------------------------------
+// Invitations
+// ---------------------------------------------------------------------------
+
+/// Invite-a-technician flow. tokenHash (not the raw token) is stored so a DB
+/// read/leak can't be used to create an account; the raw token only ever
+/// lives in the invite URL. acceptedByUserId links to the User created when
+/// the invite is accepted — null until then, since that User doesn't exist yet.
+model Invitation {
+  id               String    @id @default(cuid())
+  businessId       String
+  email            String
+  role             Role
+  tokenHash        String    @unique
+  invitedByUserId  String
+  acceptedByUserId String?   @unique
+  expiresAt        DateTime
+  acceptedAt       DateTime?
+  createdAt        DateTime  @default(now())
+
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invitedBy      User     @relation("InvitationsSent", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+  acceptedByUser User?    @relation("InvitationAccepted", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([businessId, email])
   @@index([businessId])
 }
 
