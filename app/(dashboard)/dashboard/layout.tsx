@@ -13,12 +13,12 @@ export default async function DashboardLayout({
   const user = await requireUser();
   const business = await prisma.business.findUniqueOrThrow({
     where: { id: user.businessId },
-    select: { name: true },
+    select: { name: true, logoUrl: true },
   });
 
   return (
     <SidebarProvider>
-      <AppSidebar role={user.role} businessName={business.name} />
+      <AppSidebar role={user.role} businessName={business.name} logoUrl={business.logoUrl} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />

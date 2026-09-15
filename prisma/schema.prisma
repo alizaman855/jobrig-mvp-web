@@ -54,10 +54,13 @@ enum ReviewRequestStatus {
 /// The tenant. Every other model (except this one) carries a direct
 /// businessId FK so every query can be scoped uniformly by lib/tenant.ts.
 model Business {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  logoUrl      String?
+  contactEmail String?
+  contactPhone String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   users          User[]
   invitations    Invitation[]

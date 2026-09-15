@@ -28,16 +28,33 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["OWNER"] },
 ];
 
-export function AppSidebar({ role, businessName }: { role: Role; businessName: string }) {
+export function AppSidebar({
+  role,
+  businessName,
+  logoUrl,
+}: {
+  role: Role;
+  businessName: string;
+  logoUrl?: string | null;
+}) {
   const pathname = usePathname();
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
-            J
-          </span>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt={businessName}
+              className="size-7 shrink-0 rounded-md object-cover"
+            />
+          ) : (
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
+              {businessName.charAt(0).toUpperCase()}
+            </span>
+          )}
           <span className="truncate text-sm font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             {businessName}
           </span>
