@@ -228,6 +228,7 @@ model QuoteLineItem {
   businessId  String
   quoteId     String
   description String
+  unit        String?
   quantity    Decimal  @db.Decimal(10, 2)
   unitPrice   Decimal  @db.Decimal(10, 2)
   total       Decimal  @db.Decimal(10, 2)

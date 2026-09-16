@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ClipboardList, MapPin, Navigation, Phone, Wrench } from "lucide-react";
+import Link from "next/link";
+import { ClipboardList, FileText, MapPin, Navigation, Phone, Wrench } from "lucide-react";
 import { requireUser } from "@/lib/auth-guards";
 import { forTenant } from "@/lib/tenant";
 import { JobStatusBadge } from "@/components/dashboard/job-status-badge";
@@ -101,6 +102,13 @@ export default async function MyJobsPage() {
                     Call
                   </a>
                 </div>
+                <Link
+                  href={`/dashboard/jobs/${job.id}/quote`}
+                  className="mt-2 flex h-11 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  <FileText className="size-4" />
+                  Build quote
+                </Link>
               </div>
             ))}
           </div>
