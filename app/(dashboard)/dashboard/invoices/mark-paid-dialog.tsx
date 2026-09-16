@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { markInvoicePaidAction, type MarkPaidState } from "./actions";
+import { showReviewRequestToast } from "@/lib/show-review-request-toast";
 
 const initialState: MarkPaidState = {};
 
@@ -35,7 +36,11 @@ export function MarkPaidDialog({ invoiceId, trigger }: { invoiceId: string; trig
   const [state, formAction, pending] = useActionState(boundAction, initialState);
 
   useEffect(() => {
-    if (state.success) setOpen(false);
+    if (state.success) {
+      setOpen(false);
+      showReviewRequestToast(state.reviewRequestResult);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.success]);
 
   return (

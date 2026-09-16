@@ -26,6 +26,7 @@ export async function updateSettingsAction(
     name: formData.get("name"),
     contactEmail: formData.get("contactEmail"),
     contactPhone: formData.get("contactPhone"),
+    googleReviewUrl: formData.get("googleReviewUrl"),
   });
 
   if (!parsed.success) {
@@ -50,7 +51,7 @@ export async function updateSettingsAction(
     logoUrl = await uploadBusinessLogo(user.businessId, logoFile);
   }
 
-  const { name, contactEmail, contactPhone } = parsed.data;
+  const { name, contactEmail, contactPhone, googleReviewUrl } = parsed.data;
 
   // Business has no separate id to scope by — businessId *is* its id, taken
   // from the authenticated session (never client input), so this can only
@@ -62,6 +63,7 @@ export async function updateSettingsAction(
       name,
       contactEmail: contactEmail || null,
       contactPhone: contactPhone || null,
+      googleReviewUrl: googleReviewUrl || null,
       ...(logoUrl ? { logoUrl } : {}),
     },
   });

@@ -13,7 +13,13 @@ const initialState: SettingsState = {};
 export function SettingsForm({
   business,
 }: {
-  business: { name: string; logoUrl: string | null; contactEmail: string | null; contactPhone: string | null };
+  business: {
+    name: string;
+    logoUrl: string | null;
+    contactEmail: string | null;
+    contactPhone: string | null;
+    googleReviewUrl: string | null;
+  };
 }) {
   const [state, formAction, pending] = useActionState(updateSettingsAction, initialState);
   const [preview, setPreview] = useState<string | null>(business.logoUrl);
@@ -96,6 +102,27 @@ export function SettingsForm({
           defaultValue={business.contactPhone ?? ""}
           className="h-10 max-w-md"
         />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="googleReviewUrl">Google Review link</Label>
+        <Input
+          id="googleReviewUrl"
+          name="googleReviewUrl"
+          type="url"
+          placeholder="https://g.page/r/..."
+          defaultValue={business.googleReviewUrl ?? ""}
+          className="h-10 max-w-md"
+        />
+        {state.fieldErrors?.googleReviewUrl ? (
+          <p role="alert" className="text-sm text-destructive">
+            {state.fieldErrors.googleReviewUrl}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Sent to customers after their invoice is marked paid.
+          </p>
+        )}
       </div>
 
       {state.error ? (

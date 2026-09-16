@@ -12,6 +12,7 @@ async function main() {
     create: {
       id: "demo-business",
       name: "Acme HVAC & Plumbing",
+      googleReviewUrl: "https://g.page/r/CQjjwjw-demo123/review",
     },
   });
 

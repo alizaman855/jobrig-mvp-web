@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-guards";
 import { markInvoicePaidSchema } from "@/lib/validations/invoice";
+import { sendReviewRequestForPaidInvoice, type SendReviewRequestResult } from "@/lib/send-review-request";
 
 export type MarkPaidState = {
   error?: string;
   success?: boolean;
+  reviewRequestResult?: SendReviewRequestResult;
 };
 
 export async function markInvoicePaidAction(
@@ -43,6 +45,9 @@ export async function markInvoicePaidAction(
     return { error: "Invoice not found, or already marked paid." };
   }
 
+  const reviewRequestResult = await sendReviewRequestForPaidInvoice(user.businessId, invoiceId);
+
   revalidatePath("/dashboard/invoices");
-  return { success: true };
+  revalidatePath("/dashboard/reviews");
+  return { success: true, reviewRequestResult };
 }

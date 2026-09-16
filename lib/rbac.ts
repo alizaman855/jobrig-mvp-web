@@ -19,6 +19,7 @@ const QUOTE_BUILDER_PATH = /^\/dashboard\/jobs\/[^/]+\/quote(\/|$)/;
 const ROUTE_RULES: { match: (pathname: string) => boolean; roles: Role[] }[] = [
   { match: (p) => p.startsWith("/dashboard/team"), roles: ["OWNER"] },
   { match: (p) => p.startsWith("/dashboard/settings"), roles: ["OWNER"] },
+  { match: (p) => p.startsWith("/dashboard/reviews"), roles: ["OWNER"] },
   { match: (p) => p.startsWith("/dashboard/customers"), roles: ["OWNER", "DISPATCHER"] },
   { match: (p) => p.startsWith("/dashboard/invoices"), roles: ["OWNER", "DISPATCHER"] },
   { match: (p) => QUOTE_BUILDER_PATH.test(p), roles: ["OWNER", "DISPATCHER", "TECH"] },

@@ -10,7 +10,8 @@ See [JOBRIG_MVP_TASKS.md](./JOBRIG_MVP_TASKS.md) for the full build spec and pha
 - Tailwind CSS v4 + shadcn/ui (Base UI primitives)
 - PostgreSQL + Prisma ORM
 - NextAuth.js (Phase 2)
-- Twilio for SMS (Phase 7)
+- Resend for transactional email (invoice/quote/assignment/review-request emails)
+- Vercel Blob for file storage (logos, signatures)
 - Vercel for hosting, Neon/Supabase for hosted Postgres
 
 ## Project structure
@@ -49,3 +50,10 @@ Run tests with `npm test` (Vitest). `lib/tenant.test.ts` proves cross-tenant dat
 ## Environment variables
 
 Required vars are validated at server boot via `lib/env.ts` (invoked from `instrumentation.ts`). The app throws a clear error immediately if a required var is missing. See `.env.example` for the full list.
+
+## Deliberate MVP deviations (revisit before real launch)
+
+- **Review requests via email, not SMS** (Phase 7): the task doc specifies Twilio SMS. Sent via Resend instead — no new vendor account needed, Resend was already wired up for other transactional email. `ReviewRequest.twilioMessageSid` stays in the schema, reserved and unused; `emailMessageId` is what's actually populated. Revisit if SMS is a hard requirement for launch.
+- **Tech invites aren't emailed** (Phase 2.4): the invite link is shown in the UI as a copyable link rather than sent automatically, since email wasn't wired up yet at that point in the build.
+- **Resend sends from the shared `onboarding@resend.dev` domain** (Phases 4.6, 5.4, 7.2): no custom domain is verified yet. Swap `EMAIL_FROM` in `lib/resend.ts` once one is.
+- **Stripe (Phase 6.3) is not built.** Manual "mark as paid" is the only payment path. When Stripe is added, manual mark-as-paid should stay alongside it (cash/check jobs still need a manual path), not be retired.

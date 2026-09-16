@@ -55,13 +55,14 @@ enum ReviewRequestStatus {
 /// The tenant. Every other model (except this one) carries a direct
 /// businessId FK so every query can be scoped uniformly by lib/tenant.ts.
 model Business {
-  id           String   @id @default(cuid())
-  name         String
-  logoUrl      String?
-  contactEmail String?
-  contactPhone String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(cuid())
+  name            String
+  logoUrl         String?
+  contactEmail    String?
+  contactPhone    String?
+  googleReviewUrl String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   users            User[]
   invitations      Invitation[]
@@ -284,6 +285,18 @@ model Invoice {
 // Review requests
 // ---------------------------------------------------------------------------
 
+/// twilioMessageSid stays reserved and unused for now — Phase 7 sends via
+/// Resend email instead of Twilio SMS as a deliberate MVP deviation (no new
+/// vendor account needed; Resend was already wired up in Phase 4.6). This
+/// is not a permanent decision — flagged the same way as the deferred
+/// invite-email and domain-verification items — so the column stays ready
+/// for when SMS is actually wired up, and emailMessageId (the Resend
+/// message id) is the field actually populated today.
+///
+/// @@unique([jobId]) is the same duplicate-send guard used for Invoice:
+/// sending always attempts a create and treats a unique-constraint
+/// violation as "already requested a review for this job," rather than a
+/// separate check-then-create.
 model ReviewRequest {
   id               String              @id @default(cuid())
   businessId       String
@@ -292,12 +305,13 @@ model ReviewRequest {
   status           ReviewRequestStatus @default(PENDING)
   sentAt           DateTime?
   twilioMessageSid String?
+  emailMessageId   String?
   createdAt        DateTime            @default(now())
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   job      Job      @relation(fields: [jobId], references: [id], onDelete: Restrict)
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
 
+  @@unique([jobId])
   @@index([businessId])
-  @@index([businessId, jobId])
 }

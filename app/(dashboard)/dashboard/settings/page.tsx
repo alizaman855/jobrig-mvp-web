@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Tags } from "lucide-react";
+import { ChevronRight, MessageSquareText, Tags } from "lucide-react";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 import {
@@ -18,7 +18,13 @@ export default async function SettingsPage() {
   const user = await requireRole(["OWNER"]);
   const business = await prisma.business.findUniqueOrThrow({
     where: { id: user.businessId },
-    select: { name: true, logoUrl: true, contactEmail: true, contactPhone: true },
+    select: {
+      name: true,
+      logoUrl: true,
+      contactEmail: true,
+      contactPhone: true,
+      googleReviewUrl: true,
+    },
   });
 
   return (
@@ -43,6 +49,21 @@ export default async function SettingsPage() {
               <p className="font-medium">Pricing templates</p>
               <p className="text-sm text-muted-foreground">
                 Line items techs can add to a quote in one tap.
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </Link>
+
+      <Link href="/dashboard/reviews">
+        <Card className="transition-colors hover:bg-muted/50">
+          <CardContent className="flex items-center gap-3 py-4">
+            <MessageSquareText className="size-5 text-muted-foreground" />
+            <div className="flex-1">
+              <p className="font-medium">Review requests</p>
+              <p className="text-sm text-muted-foreground">
+                See every review request sent and its delivery status.
               </p>
             </div>
             <ChevronRight className="size-4 text-muted-foreground" />
