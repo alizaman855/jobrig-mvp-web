@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { MapPin, SquarePen } from "lucide-react";
 import { requireRole } from "@/lib/auth-guards";
 import { forTenant } from "@/lib/tenant";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { InviteForm } from "./invite-form";
+import { ServiceZoneDialog } from "./service-zone-dialog";
 
 export const metadata: Metadata = { title: "Team — Jobrig" };
 
@@ -68,6 +71,7 @@ export default async function TeamPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Service zone</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,6 +81,32 @@ export default async function TeamPage() {
                   <TableCell className="text-muted-foreground">{member.email}</TableCell>
                   <TableCell>
                     <Badge variant={roleBadgeVariant(member.role)}>{member.role}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {member.role === "TECH" ? (
+                      <ServiceZoneDialog
+                        techId={member.id}
+                        techName={member.name}
+                        serviceZone={member.serviceZone}
+                        trigger={
+                          <Button type="button" variant="ghost" size="sm" className="h-8 -ml-2">
+                            {member.serviceZone ? (
+                              <>
+                                <MapPin className="size-3.5" />
+                                {member.serviceZone}
+                              </>
+                            ) : (
+                              <>
+                                <SquarePen className="size-3.5" />
+                                Set zone
+                              </>
+                            )}
+                          </Button>
+                        }
+                      />
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

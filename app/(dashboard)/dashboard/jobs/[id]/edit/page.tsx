@@ -5,6 +5,7 @@ import { forTenant } from "@/lib/tenant";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { JobForm } from "../../job-form";
 import { updateJobAction } from "../../actions";
+import { getTechCandidates } from "../../get-tech-candidates";
 
 export const metadata: Metadata = { title: "Edit job — Jobrig" };
 
@@ -20,7 +21,7 @@ export default async function EditJobPage({
   const [job, customers, techs] = await Promise.all([
     db.job.findById(id),
     db.customer.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, address: true } }),
-    db.user.findMany({ where: { role: "TECH" }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    getTechCandidates(user.businessId, id),
   ]);
 
   if (!job) notFound();

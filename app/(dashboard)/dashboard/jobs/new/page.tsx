@@ -4,6 +4,7 @@ import { forTenant } from "@/lib/tenant";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { JobForm } from "../job-form";
 import { createJobAction } from "../actions";
+import { getTechCandidates } from "../get-tech-candidates";
 
 export const metadata: Metadata = { title: "New job — Jobrig" };
 
@@ -18,7 +19,7 @@ export default async function NewJobPage({
 
   const [customers, techs] = await Promise.all([
     db.customer.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, address: true } }),
-    db.user.findMany({ where: { role: "TECH" }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    getTechCandidates(user.businessId),
   ]);
 
   return (

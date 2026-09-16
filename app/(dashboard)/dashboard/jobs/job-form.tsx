@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
+import { Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,12 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { suggestTech, type TechCandidate } from "@/lib/suggest-tech";
 import type { JobFormState } from "./actions";
 
 const initialState: JobFormState = {};
 
 type CustomerOption = { id: string; name: string; address: string };
-type TechOption = { id: string; name: string };
+type TechOption = TechCandidate;
 
 export function JobForm({
   action,
@@ -44,6 +46,7 @@ export function JobForm({
   const [state, formAction, pending] = useActionState(action, initialState);
   const [address, setAddress] = useState(job?.address ?? "");
   const [addressTouched, setAddressTouched] = useState(Boolean(job));
+  const [assignedTechId, setAssignedTechId] = useState(job?.assignedTechId ?? "unassigned");
 
   function onCustomerChange(customerId: string | null) {
     if (addressTouched || !customerId) return;
@@ -56,6 +59,15 @@ export function JobForm({
         .toISOString()
         .slice(0, 16)
     : "";
+  const [scheduledAt, setScheduledAt] = useState(scheduledAtDefault);
+
+  const suggestions = useMemo(() => {
+    if (!address.trim()) return [];
+    const candidateDateIso = scheduledAt ? scheduledAt.slice(0, 10) : null;
+    return suggestTech(address, candidateDateIso, techs);
+  }, [address, scheduledAt, techs]);
+
+  const topSuggestion = suggestions.find((s) => s.techId !== assignedTechId);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -124,7 +136,7 @@ export function JobForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="assignedTechId">Assigned tech</Label>
-          <Select name="assignedTechId" defaultValue={job?.assignedTechId ?? "unassigned"}>
+          <Select name="assignedTechId" value={assignedTechId} onValueChange={(v) => v && setAssignedTechId(v)}>
             <SelectTrigger id="assignedTechId" className="h-11 w-full text-base">
               <SelectValue placeholder="Unassigned" />
             </SelectTrigger>
@@ -144,11 +156,32 @@ export function JobForm({
             id="scheduledAt"
             name="scheduledAt"
             type="datetime-local"
-            defaultValue={scheduledAtDefault}
+            value={scheduledAt}
+            onChange={(e) => setScheduledAt(e.target.value)}
             className="h-11 text-base"
           />
         </div>
       </div>
+
+      {topSuggestion ? (
+        <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+          <Lightbulb className="mt-0.5 size-4 shrink-0 text-primary" />
+          <div className="flex-1">
+            <p className="text-foreground">
+              <span className="font-medium">Suggested: {topSuggestion.name}</span> — {topSuggestion.reason}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 shrink-0"
+            onClick={() => setAssignedTechId(topSuggestion.techId)}
+          >
+            Use
+          </Button>
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="notes">Notes</Label>

@@ -7,6 +7,7 @@ import { forTenant } from "@/lib/tenant";
 import { requireRole } from "@/lib/auth-guards";
 import { generateInviteToken, hashInviteToken, INVITE_EXPIRY_MS } from "@/lib/invite-token";
 import { inviteSchema } from "@/lib/validations/invite";
+import { serviceZoneSchema } from "@/lib/validations/service-zone";
 
 export type InviteState = {
   error?: string;
@@ -74,4 +75,30 @@ export async function inviteAction(
   const protocol = host?.startsWith("localhost") || host?.startsWith("127.0.0.1") ? "http" : "https";
   const inviteUrl = `${protocol}://${host}/invite/${token}`;
   return { inviteUrl };
+}
+
+export type ServiceZoneState = {
+  error?: string;
+  success?: boolean;
+};
+
+export async function updateServiceZoneAction(
+  techId: string,
+  _prevState: ServiceZoneState,
+  formData: FormData
+): Promise<ServiceZoneState> {
+  const user = await requireRole(["OWNER"]);
+
+  const parsed = serviceZoneSchema.safeParse({ serviceZone: formData.get("serviceZone") });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid service zone." };
+  }
+
+  const result = await forTenant({ businessId: user.businessId }).user.update(techId, {
+    serviceZone: parsed.data.serviceZone || null,
+  });
+  if (result.count === 0) return { error: "Team member not found." };
+
+  revalidatePath("/dashboard/team");
+  return { success: true };
 }

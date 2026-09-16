@@ -31,6 +31,8 @@ export function forTenant({ businessId }: TenantContext) {
           Array<Prisma.UserGetPayload<T>>
         >,
       findById: (id: string) => prisma.user.findFirst({ where: { id, businessId } }),
+      update: (id: string, data: Prisma.UserUncheckedUpdateInput) =>
+        prisma.user.updateMany({ where: { id, businessId }, data }),
     },
 
     invitation: {

@@ -24,6 +24,7 @@ enum JobStatus {
   NEW
   QUOTED
   SCHEDULED
+  EN_ROUTE
   IN_PROGRESS
   COMPLETED
   PAID
@@ -84,6 +85,7 @@ model User {
   email        String   @unique
   passwordHash String
   role         Role
+  serviceZone  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
