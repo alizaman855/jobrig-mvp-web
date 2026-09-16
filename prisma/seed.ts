@@ -86,6 +86,21 @@ async function main() {
     )
   );
 
+  const pricingTemplates = await Promise.all(
+    [
+      { id: "demo-pt-1", name: "AC unit install", unit: "ton", unitPrice: "1200.00", sortOrder: 1 },
+      { id: "demo-pt-2", name: "Fence installation", unit: "linear ft", unitPrice: "28.00", sortOrder: 2 },
+      { id: "demo-pt-3", name: "Diagnostic visit", unit: "flat", unitPrice: "89.00", sortOrder: 3 },
+      { id: "demo-pt-4", name: "Labor", unit: "hour", unitPrice: "95.00", sortOrder: 4 },
+    ].map((template) =>
+      prisma.pricingTemplate.upsert({
+        where: { id: template.id },
+        update: {},
+        create: { ...template, businessId: business.id },
+      })
+    )
+  );
+
   const now = new Date();
   const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -136,6 +151,7 @@ async function main() {
     tech: tech.email,
     customers: customers.map((c) => c.name),
     jobs: jobs.map((j) => j.serviceType),
+    pricingTemplates: pricingTemplates.map((p) => p.name),
     demoPassword: DEMO_PASSWORD,
   });
 }

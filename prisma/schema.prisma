@@ -62,14 +62,15 @@ model Business {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  users          User[]
-  invitations    Invitation[]
-  customers      Customer[]
-  jobs           Job[]
-  quotes         Quote[]
-  quoteLineItems QuoteLineItem[]
-  invoices       Invoice[]
-  reviewRequests ReviewRequest[]
+  users            User[]
+  invitations      Invitation[]
+  customers        Customer[]
+  jobs             Job[]
+  pricingTemplates PricingTemplate[]
+  quotes           Quote[]
+  quoteLineItems   QuoteLineItem[]
+  invoices         Invoice[]
+  reviewRequests   ReviewRequest[]
 }
 
 // ---------------------------------------------------------------------------
@@ -172,6 +173,30 @@ model Job {
   @@index([businessId])
   @@index([businessId, status])
   @@index([businessId, assignedTechId])
+}
+
+// ---------------------------------------------------------------------------
+// Pricing templates
+// ---------------------------------------------------------------------------
+
+/// Business-defined line items (e.g. "AC unit install" — $X per ton) that
+/// the Quote Builder offers as one-tap-to-add options. Deliberately has no
+/// relation to QuoteLineItem: a quote's line items are a copied snapshot
+/// (description/unit/unitPrice) at the moment they're added, so editing or
+/// deleting a template never changes a quote that already used it.
+model PricingTemplate {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  unit       String
+  unitPrice  Decimal  @db.Decimal(10, 2)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
 }
 
 // ---------------------------------------------------------------------------

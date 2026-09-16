@@ -64,6 +64,26 @@ export function forTenant({ businessId }: TenantContext) {
         }),
     },
 
+    pricingTemplate: {
+      findMany: <
+        T extends Omit<Prisma.PricingTemplateFindManyArgs, "where"> & {
+          where?: Prisma.PricingTemplateWhereInput;
+        },
+      >(
+        args?: T
+      ) =>
+        prisma.pricingTemplate.findMany({
+          ...args,
+          where: { ...args?.where, businessId },
+        }) as Prisma.PrismaPromise<Array<Prisma.PricingTemplateGetPayload<T>>>,
+      findById: (id: string) => prisma.pricingTemplate.findFirst({ where: { id, businessId } }),
+      create: (data: Omit<Prisma.PricingTemplateUncheckedCreateInput, "businessId">) =>
+        prisma.pricingTemplate.create({ data: { ...data, businessId } }),
+      update: (id: string, data: Prisma.PricingTemplateUncheckedUpdateInput) =>
+        prisma.pricingTemplate.updateMany({ where: { id, businessId }, data }),
+      delete: (id: string) => prisma.pricingTemplate.deleteMany({ where: { id, businessId } }),
+    },
+
     customer: {
       findMany: <
         T extends Omit<Prisma.CustomerFindManyArgs, "where"> & { where?: Prisma.CustomerWhereInput },
