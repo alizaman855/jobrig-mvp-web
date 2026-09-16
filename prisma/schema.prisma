@@ -176,6 +176,7 @@ model Job {
   @@index([businessId])
   @@index([businessId, status])
   @@index([businessId, assignedTechId])
+  @@index([businessId, scheduledAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -228,6 +229,7 @@ model Quote {
 
   @@index([businessId])
   @@index([businessId, jobId])
+  @@index([businessId, status])
 }
 
 model QuoteLineItem {
@@ -279,6 +281,7 @@ model Invoice {
   @@unique([jobId])
   @@index([businessId])
   @@index([businessId, status])
+  @@index([businessId, status, paidAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -314,4 +317,5 @@ model ReviewRequest {
 
   @@unique([jobId])
   @@index([businessId])
+  @@index([businessId, status])
 }

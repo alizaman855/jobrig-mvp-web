@@ -1,5 +1,5 @@
 import { prisma } from "./db";
-import type { Prisma } from "./generated/prisma/client.ts";
+import { Prisma } from "./generated/prisma/client.ts";
 
 /**
  * Every DB access for tenant-scoped models must go through `forTenant()`.
@@ -117,6 +117,7 @@ export function forTenant({ businessId }: TenantContext) {
       update: (id: string, data: Prisma.JobUncheckedUpdateInput) =>
         prisma.job.updateMany({ where: { id, businessId }, data }),
       delete: (id: string) => prisma.job.deleteMany({ where: { id, businessId } }),
+      count: (where?: Prisma.JobWhereInput) => prisma.job.count({ where: { ...where, businessId } }),
     },
 
     quote: {
@@ -132,6 +133,7 @@ export function forTenant({ businessId }: TenantContext) {
       update: (id: string, data: Prisma.QuoteUncheckedUpdateInput) =>
         prisma.quote.updateMany({ where: { id, businessId }, data }),
       delete: (id: string) => prisma.quote.deleteMany({ where: { id, businessId } }),
+      count: (where?: Prisma.QuoteWhereInput) => prisma.quote.count({ where: { ...where, businessId } }),
     },
 
     quoteLineItem: {
@@ -168,6 +170,13 @@ export function forTenant({ businessId }: TenantContext) {
       update: (id: string, data: Prisma.InvoiceUncheckedUpdateInput) =>
         prisma.invoice.updateMany({ where: { id, businessId }, data }),
       delete: (id: string) => prisma.invoice.deleteMany({ where: { id, businessId } }),
+      sumTotal: async (where?: Prisma.InvoiceWhereInput) => {
+        const result = await prisma.invoice.aggregate({
+          where: { ...where, businessId },
+          _sum: { total: true },
+        });
+        return result._sum.total ?? new Prisma.Decimal(0);
+      },
     },
 
     reviewRequest: {
@@ -186,6 +195,8 @@ export function forTenant({ businessId }: TenantContext) {
       update: (id: string, data: Prisma.ReviewRequestUncheckedUpdateInput) =>
         prisma.reviewRequest.updateMany({ where: { id, businessId }, data }),
       delete: (id: string) => prisma.reviewRequest.deleteMany({ where: { id, businessId } }),
+      count: (where?: Prisma.ReviewRequestWhereInput) =>
+        prisma.reviewRequest.count({ where: { ...where, businessId } }),
     },
   };
 }
