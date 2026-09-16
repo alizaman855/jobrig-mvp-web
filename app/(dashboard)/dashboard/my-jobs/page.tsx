@@ -4,6 +4,7 @@ import { ClipboardList, FileText, MapPin, Navigation, Phone, Wrench } from "luci
 import { requireUser } from "@/lib/auth-guards";
 import { forTenant } from "@/lib/tenant";
 import { JobStatusBadge } from "@/components/dashboard/job-status-badge";
+import { TechStatusButtons } from "./tech-status-buttons";
 
 export const metadata: Metadata = { title: "My Jobs — Jobrig" };
 
@@ -109,6 +110,7 @@ export default async function MyJobsPage() {
                   <FileText className="size-4" />
                   Build quote
                 </Link>
+                <TechStatusButtons jobId={job.id} status={job.status} />
               </div>
             ))}
           </div>
