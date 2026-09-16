@@ -6,6 +6,7 @@ import { requireJobAccess } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { QuoteDocument } from "@/components/quote-document";
+import { ShareQuoteButton } from "./share-quote-button";
 
 export const metadata: Metadata = { title: "Quote preview — Jobrig" };
 
@@ -44,18 +45,23 @@ export default async function QuotePreviewPage({
           <ChevronLeft className="size-4" />
           Back to job
         </Link>
-        {quote.status === "DRAFT" ? (
-          <Button
-            render={<Link href={`/dashboard/jobs/${jobId}/quote`} />}
-            nativeButton={false}
-            variant="outline"
-            size="sm"
-            className="h-9"
-          >
-            <SquarePen className="size-4" />
-            Edit
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {quote.status === "DRAFT" ? (
+            <Button
+              render={<Link href={`/dashboard/jobs/${jobId}/quote`} />}
+              nativeButton={false}
+              variant="outline"
+              size="sm"
+              className="h-9"
+            >
+              <SquarePen className="size-4" />
+              Edit
+            </Button>
+          ) : null}
+          {quote.status !== "SIGNED" ? (
+            <ShareQuoteButton jobId={jobId} quoteId={quote.id} alreadySent={quote.status === "SENT"} />
+          ) : null}
+        </div>
       </div>
 
       <QuoteDocument
@@ -68,6 +74,9 @@ export default async function QuotePreviewPage({
             status: quote.status,
             total: Number(quote.total),
             createdAt: quote.createdAt,
+            signatureUrl: quote.signatureUrl,
+            signedByName: quote.signedByName,
+            signedAt: quote.signedAt,
           },
           lineItems: quote.lineItems.map((li) => ({
             id: li.id,

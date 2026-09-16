@@ -73,3 +73,18 @@ export async function saveQuoteDraftAction(
 
   return { ok: true, quoteId: saved.id, total };
 }
+
+export async function shareQuoteAction(jobId: string, quoteId: string): Promise<{ ok: boolean }> {
+  const { user } = await requireJobAccess(jobId);
+
+  const quote = await prisma.quote.findFirst({
+    where: { id: quoteId, businessId: user.businessId, jobId },
+  });
+  if (!quote) return { ok: false };
+
+  if (quote.status === "DRAFT") {
+    await prisma.quote.update({ where: { id: quote.id }, data: { status: "SENT" } });
+  }
+
+  return { ok: true };
+}

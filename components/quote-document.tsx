@@ -23,6 +23,9 @@ export type QuoteDocumentData = {
     status: string;
     total: number;
     createdAt: Date;
+    signatureUrl: string | null;
+    signedByName: string | null;
+    signedAt: Date | null;
   };
   lineItems: {
     id: string;
@@ -116,6 +119,20 @@ export function QuoteDocument({ data }: { data: QuoteDocumentData }) {
           <span className="text-lg font-bold text-neutral-900">{currency.format(quote.total)}</span>
         </div>
       </div>
+
+      {quote.signatureUrl && quote.signedAt ? (
+        <div className="mt-8 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-sm font-medium text-emerald-900">
+            Signed by {quote.signedByName} on {dateFormatter.format(quote.signedAt)}
+          </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={quote.signatureUrl}
+            alt={`Signature of ${quote.signedByName}`}
+            className="mt-2 h-16 w-auto"
+          />
+        </div>
+      ) : null}
 
       <p className="mt-8 border-t pt-4 text-xs text-neutral-400">
         This quote is valid for 30 days from the date issued. Pricing may change if the scope of
