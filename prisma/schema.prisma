@@ -223,6 +223,7 @@ model Quote {
   job       Job             @relation(fields: [jobId], references: [id], onDelete: Restrict)
   customer  Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
   lineItems QuoteLineItem[]
+  invoices  Invoice[]
 
   @@index([businessId])
   @@index([businessId, jobId])
@@ -251,11 +252,17 @@ model QuoteLineItem {
 // Invoices
 // ---------------------------------------------------------------------------
 
+/// @@unique([jobId]) is the actual duplicate-invoice guard — generation
+/// always attempts a create and lets a unique-constraint violation mean
+/// "already invoiced," rather than checking-then-creating (the same
+/// read-then-write shape that let two quote signatures both succeed
+/// earlier; see the fix for that in the git history for why).
 model Invoice {
   id            String        @id @default(cuid())
   businessId    String
   jobId         String
   customerId    String
+  quoteId       String?
   total         Decimal       @default(0) @db.Decimal(10, 2)
   status        InvoiceStatus @default(UNPAID)
   paymentMethod String?
@@ -266,9 +273,10 @@ model Invoice {
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   job      Job      @relation(fields: [jobId], references: [id], onDelete: Restrict)
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  quote    Quote?   @relation(fields: [quoteId], references: [id], onDelete: Restrict)
 
+  @@unique([jobId])
   @@index([businessId])
-  @@index([businessId, jobId])
   @@index([businessId, status])
 }
 

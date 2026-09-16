@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Briefcase, ClipboardList, LayoutDashboard, Settings, Users, UsersRound } from "lucide-react";
+import {
+  Briefcase,
+  ClipboardList,
+  LayoutDashboard,
+  Receipt,
+  Settings,
+  Users,
+  UsersRound,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,6 +42,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/customers",
     label: "Customers",
     icon: UsersRound,
+    roles: ["OWNER", "DISPATCHER"],
+  },
+  {
+    href: "/dashboard/invoices",
+    label: "Invoices",
+    icon: Receipt,
     roles: ["OWNER", "DISPATCHER"],
   },
   {

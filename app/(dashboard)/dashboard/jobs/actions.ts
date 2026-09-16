@@ -9,6 +9,7 @@ import { requireRole } from "@/lib/auth-guards";
 import { jobSchema, jobStatusSchema } from "@/lib/validations/job";
 import { resend, EMAIL_FROM } from "@/lib/resend";
 import { jobAssignedEmailHtml } from "@/emails/job-assigned-email";
+import { generateInvoiceForCompletedJob } from "@/lib/generate-invoice";
 
 export type JobFormState = {
   error?: string;
@@ -188,6 +189,11 @@ export async function updateJobStatusAction(jobId: string, formData: FormData) {
     status: parsed.data.status,
   });
 
+  if (parsed.data.status === "COMPLETED") {
+    await generateInvoiceForCompletedJob(user.businessId, jobId);
+  }
+
   revalidatePath("/dashboard/jobs");
   revalidatePath(`/dashboard/jobs/${jobId}`);
+  revalidatePath("/dashboard/invoices");
 }
