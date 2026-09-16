@@ -9,7 +9,7 @@ import { requireRole } from "@/lib/auth-guards";
 import { jobSchema, jobStatusSchema } from "@/lib/validations/job";
 import { resend, EMAIL_FROM } from "@/lib/resend";
 import { jobAssignedEmailHtml } from "@/emails/job-assigned-email";
-import { generateInvoiceForCompletedJob } from "@/lib/generate-invoice";
+import { generateInvoiceForCompletedJob, type GenerateInvoiceResult } from "@/lib/generate-invoice";
 
 export type JobFormState = {
   error?: string;
@@ -180,20 +180,26 @@ export async function updateJobAction(
   redirect(`/dashboard/jobs/${jobId}`);
 }
 
-export async function updateJobStatusAction(jobId: string, formData: FormData) {
+export async function updateJobStatusAction(
+  jobId: string,
+  formData: FormData
+): Promise<{ invoiceResult?: GenerateInvoiceResult }> {
   const user = await requireRole(["OWNER", "DISPATCHER"]);
   const parsed = jobStatusSchema.safeParse({ status: formData.get("status") });
-  if (!parsed.success) return;
+  if (!parsed.success) return {};
 
   await forTenant({ businessId: user.businessId }).job.update(jobId, {
     status: parsed.data.status,
   });
 
+  let invoiceResult: GenerateInvoiceResult | undefined;
   if (parsed.data.status === "COMPLETED") {
-    await generateInvoiceForCompletedJob(user.businessId, jobId);
+    invoiceResult = await generateInvoiceForCompletedJob(user.businessId, jobId);
   }
 
   revalidatePath("/dashboard/jobs");
   revalidatePath(`/dashboard/jobs/${jobId}`);
   revalidatePath("/dashboard/invoices");
+
+  return { invoiceResult };
 }

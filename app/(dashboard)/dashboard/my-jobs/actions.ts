@@ -4,19 +4,22 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth-guards";
 import { TECH_STATUS_STEPS } from "@/lib/validations/job";
-import { generateInvoiceForCompletedJob } from "@/lib/generate-invoice";
+import { generateInvoiceForCompletedJob, type GenerateInvoiceResult } from "@/lib/generate-invoice";
 import { z } from "zod";
 
 const techStatusSchema = z.object({
   status: z.enum(TECH_STATUS_STEPS),
 });
 
-export async function updateOwnJobStatusAction(jobId: string, formData: FormData) {
+export async function updateOwnJobStatusAction(
+  jobId: string,
+  formData: FormData
+): Promise<{ invoiceResult?: GenerateInvoiceResult }> {
   const user = await requireUser();
-  if (user.role !== "TECH") return;
+  if (user.role !== "TECH") return {};
 
   const parsed = techStatusSchema.safeParse({ status: formData.get("status") });
-  if (!parsed.success) return;
+  if (!parsed.success) return {};
 
   // Scoped by assignedTechId, not just businessId — a tech may only move
   // the status of a job actually assigned to them, enforced in the write
@@ -26,8 +29,9 @@ export async function updateOwnJobStatusAction(jobId: string, formData: FormData
     data: { status: parsed.data.status },
   });
 
+  let invoiceResult: GenerateInvoiceResult | undefined;
   if (result.count > 0 && parsed.data.status === "COMPLETED") {
-    await generateInvoiceForCompletedJob(user.businessId, jobId);
+    invoiceResult = await generateInvoiceForCompletedJob(user.businessId, jobId);
   }
 
   revalidatePath("/dashboard/my-jobs");
@@ -35,4 +39,6 @@ export async function updateOwnJobStatusAction(jobId: string, formData: FormData
   revalidatePath("/dashboard/jobs/calendar");
   revalidatePath(`/dashboard/jobs/${jobId}`);
   revalidatePath("/dashboard/invoices");
+
+  return { invoiceResult };
 }

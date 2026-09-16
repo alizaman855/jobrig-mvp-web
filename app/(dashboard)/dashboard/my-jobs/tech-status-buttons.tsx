@@ -5,6 +5,7 @@ import { Car, CheckCircle2, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TECH_STATUS_STEPS } from "@/lib/validations/job";
 import type { JobStatus } from "@/lib/generated/prisma/client.ts";
+import { showInvoiceResultToast } from "@/lib/show-invoice-result-toast";
 import { updateOwnJobStatusAction } from "./actions";
 
 const STEP_META: Record<(typeof TECH_STATUS_STEPS)[number], { label: string; icon: typeof Car }> = {
@@ -19,8 +20,9 @@ export function TechStatusButtons({ jobId, status }: { jobId: string; status: Jo
   function setStatus(next: (typeof TECH_STATUS_STEPS)[number]) {
     const formData = new FormData();
     formData.set("status", next);
-    startTransition(() => {
-      updateOwnJobStatusAction(jobId, formData);
+    startTransition(async () => {
+      const { invoiceResult } = await updateOwnJobStatusAction(jobId, formData);
+      showInvoiceResultToast(invoiceResult);
     });
   }
 

@@ -11,6 +11,7 @@ import {
 import { JOB_STATUSES } from "@/lib/validations/job";
 import { jobStatusLabel } from "@/components/dashboard/job-status-badge";
 import { updateJobStatusAction } from "@/app/(dashboard)/dashboard/jobs/actions";
+import { showInvoiceResultToast } from "@/lib/show-invoice-result-toast";
 import type { JobStatus } from "@/lib/generated/prisma/client.ts";
 
 export function JobStatusSelect({ jobId, status }: { jobId: string; status: JobStatus }) {
@@ -20,8 +21,9 @@ export function JobStatusSelect({ jobId, status }: { jobId: string; status: JobS
     if (!next) return;
     const formData = new FormData();
     formData.set("status", next);
-    startTransition(() => {
-      updateJobStatusAction(jobId, formData);
+    startTransition(async () => {
+      const { invoiceResult } = await updateJobStatusAction(jobId, formData);
+      showInvoiceResultToast(invoiceResult);
     });
   }
 
