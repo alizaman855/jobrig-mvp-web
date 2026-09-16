@@ -31,8 +31,12 @@ export async function signQuoteAction(
   }
 
   // Public, unauthenticated action — no session/businessId to scope by.
-  // The quote is looked up by id alone and only ever mutated if it's
-  // currently SENT, which closes the double-submit / already-signed race.
+  // This initial read is only for a fast, friendly error message and to
+  // fetch fields for the email below — it is NOT what prevents double
+  // signing. Two requests can both pass this check before either writes,
+  // so the actual guard is the updateMany's `status: "SENT"` WHERE clause
+  // further down: the database serializes concurrent UPDATEs to the same
+  // row, so only one can match it, and the loser's count is 0.
   const quote = await prisma.quote.findUnique({
     where: { id: quoteId },
     include: {
@@ -48,21 +52,28 @@ export async function signQuoteAction(
   const signatureUrl = await uploadSignatureImage(quote.id, parsed.data.signatureDataUrl);
   const signedAt = new Date();
 
-  await prisma.$transaction([
-    prisma.quote.update({
-      where: { id: quote.id },
+  const won = await prisma.$transaction(async (tx) => {
+    const result = await tx.quote.updateMany({
+      where: { id: quote.id, status: "SENT" },
       data: {
         status: "SIGNED",
         signatureUrl,
         signedByName: parsed.data.signedByName,
         signedAt,
       },
-    }),
-    prisma.job.update({
+    });
+    if (result.count === 0) return false;
+
+    await tx.job.update({
       where: { id: quote.jobId },
       data: { status: "SCHEDULED" },
-    }),
-  ]);
+    });
+    return true;
+  });
+
+  if (!won) {
+    return { error: "This quote has already been signed." };
+  }
 
   if (quote.customer.email) {
     try {

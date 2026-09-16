@@ -29,7 +29,11 @@ export async function saveQuoteDraftAction(
   if (!parsed.success) return { ok: false, error: "Invalid line items." };
 
   // A quote in this business, for this job, owned by this save — never
-  // trust a client-supplied quoteId beyond that it resolves to one.
+  // trust a client-supplied quoteId beyond that it resolves to one. This
+  // initial read is only for a fast error message; it is NOT what stops a
+  // stale autosave from overwriting a quote a customer just signed via the
+  // public link (a concurrent, unrelated actor this action has no other
+  // way to know about). The actual guard is the updateMany below.
   if (quoteId) {
     const existing = await prisma.quote.findFirst({
       where: { id: quoteId, businessId: user.businessId, jobId },
@@ -41,23 +45,33 @@ export async function saveQuoteDraftAction(
   const total = computeTotal(parsed.data.lineItems);
 
   const saved = await prisma.$transaction(async (tx) => {
-    const quote = quoteId
-      ? await tx.quote.update({ where: { id: quoteId }, data: { total } })
-      : await tx.quote.create({
-          data: {
-            businessId: user.businessId,
-            jobId,
-            customerId: job.customerId,
-            total,
-          },
-        });
+    let resolvedQuoteId: string;
 
-    await tx.quoteLineItem.deleteMany({ where: { quoteId: quote.id } });
+    if (quoteId) {
+      const result = await tx.quote.updateMany({
+        where: { id: quoteId, status: { not: "SIGNED" } },
+        data: { total },
+      });
+      if (result.count === 0) return null;
+      resolvedQuoteId = quoteId;
+    } else {
+      const created = await tx.quote.create({
+        data: {
+          businessId: user.businessId,
+          jobId,
+          customerId: job.customerId,
+          total,
+        },
+      });
+      resolvedQuoteId = created.id;
+    }
+
+    await tx.quoteLineItem.deleteMany({ where: { quoteId: resolvedQuoteId } });
     if (parsed.data.lineItems.length > 0) {
       await tx.quoteLineItem.createMany({
         data: parsed.data.lineItems.map((item, index) => ({
           businessId: user.businessId,
-          quoteId: quote.id,
+          quoteId: resolvedQuoteId,
           description: item.description,
           unit: item.unit || null,
           quantity: item.quantity,
@@ -68,10 +82,14 @@ export async function saveQuoteDraftAction(
       });
     }
 
-    return quote;
+    return resolvedQuoteId;
   });
 
-  return { ok: true, quoteId: saved.id, total };
+  if (!saved) {
+    return { ok: false, error: "This quote is already signed." };
+  }
+
+  return { ok: true, quoteId: saved, total };
 }
 
 export async function shareQuoteAction(jobId: string, quoteId: string): Promise<{ ok: boolean }> {
