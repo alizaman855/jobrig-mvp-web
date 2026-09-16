@@ -30,10 +30,21 @@ export default async function JobsBoardPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{jobs.length} total jobs</p>
-        <Button render={<Link href="/dashboard/jobs/new" />} nativeButton={false} className="h-10">
-          <Plus className="size-4" />
-          New job
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            render={<Link href="/dashboard/jobs/calendar" />}
+            nativeButton={false}
+            variant="outline"
+            className="h-10"
+          >
+            <Calendar className="size-4" />
+            Schedule
+          </Button>
+          <Button render={<Link href="/dashboard/jobs/new" />} nativeButton={false} className="h-10">
+            <Plus className="size-4" />
+            New job
+          </Button>
+        </div>
       </div>
 
       <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
